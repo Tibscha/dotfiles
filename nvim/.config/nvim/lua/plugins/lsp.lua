@@ -13,7 +13,7 @@ return {
 		dependencies = { "mason-org/mason.nvim" },
 		config = function()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "pyright", "lua_ls" },
+				ensure_installed = { "pyright", "lua_ls", "texlab" },
 				automatic_installation = true,
 			})
 		end,
@@ -70,11 +70,31 @@ return {
 				},
 			})
 
+			-----------------------------
+			-- TEXLAB = Fehlermeldungen --
+			-----------------------------
+			vim.lsp.config("texlab", {
+				settings = {
+					texlab = {
+						build = {
+							executable = "latexmk",
+							args = { "-pdf", "-interaction=nonstopmode", "-synctex=1", "%f" },
+							onSave = true, -- ⬅ Kompiliert beim Speichern
+						},
+						chktex = {
+							onOpenAndSave = true, -- Fehlermeldungen
+							onEdit = true,
+						},
+					},
+				},
+			})
+
 			-------------------------
 			-- Server aktivieren ----
 			-------------------------
 			vim.lsp.enable("pyright")
 			vim.lsp.enable("jedi_language_server")
+			vim.lsp.enable("texlab")
 
 			------------------------------
 			-- Diagnostics anzeigen -----
@@ -117,6 +137,16 @@ return {
 							return client.name == "null-ls" -- hier ist der korrekte Name
 						end,
 					})
+				end,
+			})
+
+			----------------------------
+			-- FORMAT ON SAVE (Latex) --
+			----------------------------
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				pattern = "*.tex",
+				callback = function()
+					vim.lsp.buf.format({ timeout_ms = 3000 })
 				end,
 			})
 		end,
