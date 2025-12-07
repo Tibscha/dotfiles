@@ -3,7 +3,7 @@ local wezterm = require("wezterm")
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
-config.default_prog = {"/bin/zsh", "-l"}
+config.default_prog = { "/bin/zsh", "-l" }
 
 -- This is where you actually apply your config choices.
 
@@ -58,16 +58,24 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
 		{ Text = SOLID_RIGHT_ARROW },
 	}
 end)
+config.keys = {
+	{
+		key = "w",
+		mods = "CMD",
+		action = wezterm.action.CloseCurrentTab({ confirm = false }),
+	},
+}
+
 config.skip_close_confirmation_for_processes_named = {
-  'bash',
-  'sh',
-  'zsh',
-  'fish',
-  'tmux',
-  'nu',
-  'cmd.exe',
-  'pwsh.exe',
-  'powershell.exe',
+	"bash",
+	"sh",
+	"zsh",
+	"fish",
+	"tmux",
+	"nu",
+	"cmd.exe",
+	"pwsh.exe",
+	"powershell.exe",
 }
 -- Finally, return the configuration to wezterm:
 return config
