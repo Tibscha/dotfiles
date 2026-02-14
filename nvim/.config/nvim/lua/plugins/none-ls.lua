@@ -10,7 +10,7 @@ return {
 			filetypes = { "tex" },
 			generator = null_ls.generator({
 				command = "chktex",
-				args = { "-q", "-f%l:%c:%d:%k:%m\n", "-" },
+				args = { "-q", "-f%l:%c:%d:%k:%m\n", "-n13", "-" },
 				to_stdin = true,
 				from_stderr = false,
 				format = "raw",
@@ -50,14 +50,58 @@ return {
 		null_ls.setup({
 			debug = true,
 			sources = {
+				-- Lua
 				null_ls.builtins.formatting.stylua,
-				null_ls.builtins.formatting.black,
+
+				-- Python
+				null_ls.builtins.formatting.black.with({
+					extra_args = { "--line-length", "80" },
+				}),
 				null_ls.builtins.formatting.isort,
+
+				-- Frontend (Vite + React + TS)
+				null_ls.builtins.formatting.prettier.with({
+					filetypes = {
+						"javascript",
+						"javascriptreact",
+						"typescript",
+						"typescriptreact",
+						"json",
+						"css",
+						"scss",
+						"html",
+						"markdown",
+					},
+				}),
+
+				-- ESLint: erstmal nur diagnostics (stabil)
+				null_ls.builtins.diagnostics.eslint_d,
+				null_ls.builtins.code_actions.eslint_d,
+
+				-- Latex
 				latexindent,
-				chktex, -- eigene Quelle
+				chktex,
+
+				-- C/C++
+				null_ls.builtins.formatting.clang_format.with({
+					filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+					extra_args = { "--style=file" },
+				}),
 			},
 		})
 
 		vim.keymap.set("n", "<leader>gf", vim.lsp.buf.format, {})
+		vim.api.nvim_create_autocmd("BufWritePre", {
+			pattern = { "*.c", "*.cpp", "*.h", "*.hpp" },
+			callback = function(event)
+				vim.lsp.buf.format({
+					bufnr = event.buf,
+					timeout_ms = 3000,
+					filter = function(client)
+						return client.name == "null-ls"
+					end,
+				})
+			end,
+		})
 	end,
 }

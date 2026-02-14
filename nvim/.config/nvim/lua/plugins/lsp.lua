@@ -13,7 +13,19 @@ return {
 		dependencies = { "mason-org/mason.nvim" },
 		config = function()
 			require("mason-lspconfig").setup({
-				ensure_installed = { "pyright", "lua_ls", "texlab" },
+				ensure_installed = {
+					"pyright",
+					"lua_ls",
+					"texlab",
+					"clangd",
+					"ts_ls",
+					"eslint",
+					"tailwindcss",
+					"html",
+					"cssls",
+					"jsonls",
+					"emmet_ls",
+				},
 				automatic_installation = true,
 			})
 		end,
@@ -89,12 +101,109 @@ return {
 				},
 			})
 
+			----------------------
+			-- CLANGD = C / C++ --
+			----------------------
+			vim.lsp.config("clangd", {
+				on_attach = function(client, bufnr)
+					-- clangd kann formatieren → optional deaktivieren,
+					-- falls du clang-format extern nutzen willst
+					-- client.server_capabilities.documentFormattingProvider = false
+
+					on_attach(client, bufnr)
+				end,
+				cmd = {
+					"clangd",
+					"--background-index",
+					"--clang-tidy",
+					"--completion-style=detailed",
+					"--header-insertion=iwyu",
+				},
+				filetypes = { "c", "cpp", "objc", "objcpp", "cuda" },
+			})
+
+			-------------------------
+			-- TS/JS = React / Node --
+			-------------------------
+			vim.lsp.config("ts_ls", {
+				on_attach = function(client, bufnr)
+					-- Formatting lieber Prettier/null-ls überlassen
+					client.server_capabilities.documentFormattingProvider = false
+					client.server_capabilities.documentRangeFormattingProvider = false
+					on_attach(client, bufnr)
+				end,
+				settings = {
+					-- optional: etwas “freundlicher” fürs Frontend
+					completions = {
+						completeFunctionCalls = true,
+					},
+				},
+			})
+
+			--------------
+			-- ESLint LSP --
+			--------------
+			vim.lsp.config("eslint", {
+				on_attach = function(client, bufnr)
+					on_attach(client, bufnr)
+				end,
+			})
+
+			----------------
+			-- TailwindCSS --
+			----------------
+			vim.lsp.config("tailwindcss", {
+				on_attach = on_attach,
+				filetypes = {
+					"html",
+					"css",
+					"scss",
+					"javascript",
+					"javascriptreact",
+					"typescript",
+					"typescriptreact",
+					"svelte",
+					"vue",
+				},
+			})
+
+			---------
+			-- HTML --
+			---------
+			vim.lsp.config("html", { on_attach = on_attach })
+
+			--------
+			-- CSS --
+			--------
+			vim.lsp.config("cssls", { on_attach = on_attach })
+
+			---------
+			-- JSON --
+			---------
+			vim.lsp.config("jsonls", { on_attach = on_attach })
+
+			----------
+			-- Emmet --
+			----------
+			vim.lsp.config("emmet_ls", {
+				on_attach = on_attach,
+				filetypes = { "html", "css", "scss", "javascriptreact", "typescriptreact" },
+			})
+
 			-------------------------
 			-- Server aktivieren ----
 			-------------------------
 			vim.lsp.enable("pyright")
 			vim.lsp.enable("jedi_language_server")
 			vim.lsp.enable("texlab")
+			vim.lsp.enable("clangd")
+			vim.lsp.enable("ts_ls")
+			vim.lsp.enable("eslint")
+			vim.lsp.enable("tailwindcss")
+			vim.lsp.enable("html")
+			vim.lsp.enable("cssls")
+			vim.lsp.enable("jsonls")
+			vim.lsp.enable("emmet_ls")
 
 			------------------------------
 			-- Diagnostics anzeigen -----
@@ -108,7 +217,7 @@ return {
 			})
 
 			--------------------------------------------------
-			-- FORMAT ON SAVE (BLACK + ISORT via none-ls) ----
+			-- FORMAT ON SAVE (BLACK + ISORT via null-ls) ----
 			--------------------------------------------------
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				pattern = "*.py",
@@ -117,8 +226,8 @@ return {
 						bufnr = event.buf,
 						timeout_ms = 3000,
 						filter = function(client)
-							-- Nur none-ls formatiert
-							return client.name == "none-ls"
+							-- Nur null-ls formatiert
+							return client.name == "null-ls"
 						end,
 					})
 				end,
@@ -134,7 +243,7 @@ return {
 						bufnr = event.buf,
 						timeout_ms = 3000,
 						filter = function(client)
-							return client.name == "null-ls" -- hier ist der korrekte Name
+							return client.name == "null-ls"
 						end,
 					})
 				end,
@@ -147,6 +256,32 @@ return {
 				pattern = "*.tex",
 				callback = function()
 					vim.lsp.buf.format({ timeout_ms = 3000 })
+				end,
+			})
+
+			----------------
+			-- FORMAT C++ --
+			----------------
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				pattern = { "*.c", "*.cpp", "*.h", "*.hpp" },
+				callback = function()
+					vim.lsp.buf.format({ timeout_ms = 3000 })
+				end,
+			})
+
+			------------------------
+			-- FORMAT TS/JS/React --
+			------------------------
+			vim.api.nvim_create_autocmd("BufWritePre", {
+				pattern = { "*.js", "*.jsx", "*.ts", "*.tsx", "*.json", "*.css", "*.scss", "*.md" },
+				callback = function(event)
+					vim.lsp.buf.format({
+						bufnr = event.buf,
+						timeout_ms = 3000,
+						filter = function(client)
+							return client.name == "null-ls"
+						end,
+					})
 				end,
 			})
 		end,
