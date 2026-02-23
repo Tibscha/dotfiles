@@ -41,6 +41,7 @@ alias pince='sudo -E ~/.pince/PINCE-x86_64.AppImage'
 alias inv='selected=$(fzf --preview="bat --color=always {}") && [ -n "$selected" ] && nvim "$selected"'
 alias vortex='bash ~/.local/share/steamtinkerlaunch/steamtinkerlaunch vortex start'
 alias nvidiareset='bash /home/tibor/.scripts/nvidia.sh'
+alias ember='tmuxifier load-session ember'
 
 # -----------------------------
 # Completions
@@ -110,6 +111,9 @@ zinit light Aloxaf/fzf-tab
 # Syntax highlighting MUST be loaded last
 #source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
+export PATH="$HOME/.tmuxifier/bin:$PATH"
+export EDITOR=nvim
+eval "$(tmuxifier init -)"
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
