@@ -15,15 +15,15 @@ if initialize_session "ember"; then
   select_pane 1
   #run_cmd "tmux select-pane -t 1 -T 'db+frontend'"
   run_cmd "git pull"
-  run_cmd "cd frontend/ && npm run dev"
+  run_cmd "./scripts/sync-deps.sh frontend && cd frontend/ && npm run dev"
 
   select_pane 2
   #run_cmd "tmux select-pane -t 2 -T 'backend'"
-  run_cmd "cd backend && source .venv/bin/activate && uvicorn app.main:app --reload"
+  run_cmd "source backend/.venv/bin/activate && ./scripts/sync-deps.sh backend && cd backend/ && uvicorn app.main:app --reload"
 
   select_pane 0
   #run_cmd "tmux select-pane -t 0 -T 'nvim'"
-  run_cmd "cd . && nvim"
+  run_cmd "cd . && source backend/.venv/bin/activate && nvim"
 
 fi
 
