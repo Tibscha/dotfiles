@@ -42,6 +42,8 @@ alias inv='selected=$(fzf --preview="bat --color=always {}") && [ -n "$selected"
 alias vortex='bash ~/.local/share/steamtinkerlaunch/steamtinkerlaunch vortex start'
 alias nvidiareset='bash /home/tibor/.scripts/nvidia.sh'
 alias ember='tmuxifier load-session ember'
+alias embercode='cd ~/git/Ember && source backend/.venv/bin/activate && opencode'
+alias zk='cd ~/Documents/Notes/Brain/ && nvim'
 
 # -----------------------------
 # Completions

@@ -15,9 +15,12 @@ return {
 				from_stderr = false,
 				format = "raw",
 				on_output = function(line)
+					if type(line) ~= "string" then
+						return nil
+					end
 					-- Erwartetes Format:
 					-- line:col:errorcode:severity:message
-					local row, col, err, sev, msg = line:match("(%d+):(%d+):(%d+):(%d+):(.*)")
+					local row, col, _, sev, msg = line:match("(%d+):(%d+):(%d+):(%d+):(.*)")
 					if not row then
 						return nil
 					end
@@ -33,8 +36,6 @@ return {
 				end,
 			}),
 		}
-
-		local null_ls = require("null-ls")
 
 		local latexindent = {
 			name = "latexindent",
@@ -74,10 +75,6 @@ return {
 					},
 				}),
 
-				-- ESLint: erstmal nur diagnostics (stabil)
-				null_ls.builtins.diagnostics.eslint_d,
-				null_ls.builtins.code_actions.eslint_d,
-
 				-- Latex
 				latexindent,
 				chktex,
@@ -90,18 +87,5 @@ return {
 			},
 		})
 
-		vim.keymap.set("n", "<leader>gf", vim.lsp.buf.format, {})
-		vim.api.nvim_create_autocmd("BufWritePre", {
-			pattern = { "*.c", "*.cpp", "*.h", "*.hpp" },
-			callback = function(event)
-				vim.lsp.buf.format({
-					bufnr = event.buf,
-					timeout_ms = 3000,
-					filter = function(client)
-						return client.name == "null-ls"
-					end,
-				})
-			end,
-		})
 	end,
 }

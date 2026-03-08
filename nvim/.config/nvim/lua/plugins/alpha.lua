@@ -167,7 +167,8 @@ end
 
 return {
   "goolord/alpha-nvim",
-  event = "VimEnter",
+  enabled = false,
+  lazy = false,
   config = function()
     require("alpha").setup {
       layout = layout(),
@@ -196,6 +197,20 @@ return {
 
     -- Keymap fürs Dashboard
     vim.keymap.set("n", "<leader>A", "<cmd>Alpha<CR>", { desc = "Open Alpha Dashboard" })
+
+    vim.api.nvim_create_autocmd("VimEnter", {
+      callback = function()
+        if vim.fn.argc() > 0 then
+          return
+        end
+        if vim.bo.filetype == "alpha" then
+          return
+        end
+        if vim.api.nvim_buf_get_name(0) ~= "" then
+          return
+        end
+        vim.cmd("Alpha")
+      end,
+    })
   end,
 }
-

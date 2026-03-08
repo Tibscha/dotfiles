@@ -1,0 +1,101 @@
+-- local M = {}
+--
+-- local FILETYPES = { "bib", "gitcommit", "markdown", "plaintex", "tex" }
+--
+-- local function ltex_clients(bufnr)
+--   return vim.lsp.get_clients({ name = "ltex", bufnr = bufnr })
+-- end
+--
+-- local function set_ltex_language(lang)
+--   for _, client in ipairs(vim.lsp.get_clients({ name = "ltex" })) do
+--     client.config.settings = client.config.settings or {}
+--     client.config.settings.ltex = client.config.settings.ltex or {}
+--     client.config.settings.ltex.language = lang
+--     client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+--   end
+--   vim.g.ltex_language = lang
+-- end
+--
+-- local function add_word_under_cursor()
+--   local word = vim.fn.expand("<cword>")
+--   if word == nil or word == "" then
+--     vim.notify("No word under cursor", vim.log.levels.WARN)
+--     return
+--   end
+--
+--   local clients = ltex_clients(0)
+--   if #clients == 0 then
+--     vim.notify("LTEX is not attached for this buffer", vim.log.levels.WARN)
+--     return
+--   end
+--
+--   for _, client in ipairs(clients) do
+--     client.config.settings = client.config.settings or {}
+--     client.config.settings.ltex = client.config.settings.ltex or {}
+--
+--     local lang = client.config.settings.ltex.language or vim.g.ltex_language or "en-US"
+--     local dictionary = client.config.settings.ltex.dictionary or {}
+--     dictionary[lang] = dictionary[lang] or {}
+--
+--     if not vim.tbl_contains(dictionary[lang], word) then
+--       table.insert(dictionary[lang], word)
+--     end
+--
+--     client.config.settings.ltex.dictionary = dictionary
+--     client:notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+--     vim.notify(string.format("LTEX: added '%s' to %s dictionary", word, lang), vim.log.levels.INFO)
+--   end
+-- end
+--
+-- function M.setup(on_attach)
+--   vim.lsp.config("ltex", {
+--     on_attach = on_attach,
+--     filetypes = FILETYPES,
+--     settings = {
+--       ltex = {
+--         language = "en-US",
+--         latex = {
+--           commands = {
+--             ["\\UnderlineField[]{}{}"] = "ignore",
+--             ["\\UnderlineField{}{}"] = "ignore",
+--           },
+--         },
+--         additionalRules = {
+--           motherTongue = "de-DE",
+--         },
+--         dictionary = {
+--           ["de-DE"] = { "Neovim", "LuaSnip", "Obsidian", "marksman", "null-ls" },
+--           ["en-US"] = { "Neovim", "LuaSnip", "Obsidian", "marksman", "null-ls" },
+--         },
+--       },
+--     },
+--   })
+--
+--   vim.api.nvim_create_user_command("LtexLang", function(cmd)
+--     local lang = cmd.args
+--     if lang ~= "de-DE" and lang ~= "en-US" then
+--       vim.notify("Use :LtexLang de-DE or :LtexLang en-US", vim.log.levels.WARN)
+--       return
+--     end
+--     set_ltex_language(lang)
+--   end, {
+--     nargs = 1,
+--     complete = function()
+--       return { "de-DE", "en-US" }
+--     end,
+--   })
+--
+--   vim.keymap.set("n", "<leader>uld", function()
+--     set_ltex_language("de-DE")
+--   end, { desc = "LTEX language: de-DE" })
+--
+--   vim.keymap.set("n", "<leader>ule", function()
+--     set_ltex_language("en-US")
+--   end, { desc = "LTEX language: en-US" })
+--
+--   vim.keymap.set("n", "<leader>ula", add_word_under_cursor, { desc = "LTEX add word under cursor" })
+--
+--   vim.lsp.enable("ltex")
+-- end
+--
+-- return M

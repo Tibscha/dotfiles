@@ -12,21 +12,25 @@ return {
 		"mason-org/mason-lspconfig.nvim",
 		dependencies = { "mason-org/mason.nvim" },
 		config = function()
-			require("mason-lspconfig").setup({
-				ensure_installed = {
-					"pyright",
-					"lua_ls",
-					"texlab",
-					"clangd",
-					"ts_ls",
+				require("mason-lspconfig").setup({
+					ensure_installed = {
+						"pyright",
+						"lua_ls",
+						"texlab",
+						"clangd",
+						"ts_ls",
 					"eslint",
 					"tailwindcss",
 					"html",
 					"cssls",
 					"jsonls",
 					"emmet_ls",
+					"marksman",
 				},
 				automatic_installation = true,
+				automatic_enable = {
+					exclude = { "ltex" },
+				},
 			})
 		end,
 	},
@@ -46,6 +50,34 @@ return {
 				bufmap("n", "K", vim.lsp.buf.hover)
 				bufmap("n", "gd", vim.lsp.buf.definition)
 				bufmap({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action)
+			end
+
+			local util = require("lspconfig.util")
+			local obsidian_vault = vim.fs.normalize("/home/tibor/Documents/Notes/Brain")
+
+			local function resolve_path(path_or_bufnr)
+				if type(path_or_bufnr) == "number" then
+					local name = vim.api.nvim_buf_get_name(path_or_bufnr)
+					if name == "" then
+						return nil
+					end
+					return name
+				end
+
+				if type(path_or_bufnr) == "string" and path_or_bufnr ~= "" then
+					return path_or_bufnr
+				end
+
+				return nil
+			end
+
+			local function in_obsidian_vault(path_or_bufnr)
+				local path = resolve_path(path_or_bufnr)
+				if not path then
+					return false
+				end
+				local normalized = vim.fs.normalize(path)
+				return normalized == obsidian_vault or normalized:sub(1, #obsidian_vault + 1) == (obsidian_vault .. "/")
 			end
 
 			---------------------------------------
@@ -190,6 +222,41 @@ return {
 				filetypes = { "html", "css", "scss", "javascriptreact", "typescriptreact" },
 			})
 
+			----------------
+			-- Marksman ---
+			----------------
+			vim.lsp.config("marksman", {
+				on_attach = function(client, bufnr)
+					if in_obsidian_vault(vim.api.nvim_buf_get_name(bufnr)) then
+						client.server_capabilities.documentLinkProvider = false
+					end
+					on_attach(client, bufnr)
+				end,
+				handlers = {
+					["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
+						if result and result.diagnostics then
+							result.diagnostics = vim.tbl_filter(function(d)
+								local msg = (d.message or ""):lower()
+								return not msg:find("spelling", 1, true)
+							end, result.diagnostics)
+						end
+						return vim.lsp.handlers["textDocument/publishDiagnostics"](err, result, ctx, config)
+					end,
+				},
+				filetypes = { "markdown" },
+				root_dir = function(path_or_bufnr)
+					local fname = resolve_path(path_or_bufnr)
+					if not fname then
+						return nil
+					end
+
+					if in_obsidian_vault(fname) then
+						return obsidian_vault
+					end
+					return util.root_pattern(".marksman.toml", ".git")(fname) or util.path.dirname(fname)
+				end,
+			})
+
 			-------------------------
 			-- Server aktivieren ----
 			-------------------------
@@ -204,6 +271,7 @@ return {
 			vim.lsp.enable("cssls")
 			vim.lsp.enable("jsonls")
 			vim.lsp.enable("emmet_ls")
+			vim.lsp.enable("marksman")
 
 			------------------------------
 			-- Diagnostics anzeigen -----
@@ -234,21 +302,8 @@ return {
 			})
 
 			---------------------------------------------------------
-			-- PYRIGHT ORGANIZE IMPORTS (entfernt unused + sortiert) -
+			-- PYTHON FORMAT ON SAVE -------------------------------
 			---------------------------------------------------------
-			vim.api.nvim_create_autocmd("BufWritePre", {
-				pattern = "*.py",
-				callback = function(event)
-					vim.lsp.buf.format({
-						bufnr = event.buf,
-						timeout_ms = 3000,
-						filter = function(client)
-							return client.name == "null-ls"
-						end,
-					})
-				end,
-			})
-
 			----------------------------
 			-- FORMAT ON SAVE (Latex) --
 			----------------------------
@@ -260,12 +315,18 @@ return {
 			})
 
 			----------------
-			-- FORMAT C++ --
+			-- FORMAT C/C++
 			----------------
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				pattern = { "*.c", "*.cpp", "*.h", "*.hpp" },
-				callback = function()
-					vim.lsp.buf.format({ timeout_ms = 3000 })
+				callback = function(event)
+					vim.lsp.buf.format({
+						bufnr = event.buf,
+						timeout_ms = 3000,
+						filter = function(client)
+							return client.name == "null-ls"
+						end,
+					})
 				end,
 			})
 
