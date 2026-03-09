@@ -149,6 +149,9 @@ return {
       local vault = resolve_vault_path()
       return {
         legacy_commands = false,
+        ui = {
+          enable = false,
+        },
         workspaces = {
           {
             name = "vault",
