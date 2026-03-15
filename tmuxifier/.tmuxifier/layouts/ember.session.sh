@@ -19,7 +19,7 @@ if initialize_session "ember"; then
 
   select_pane 2
   #run_cmd "tmux select-pane -t 2 -T 'backend'"
-  run_cmd "source backend/.venv/bin/activate && ./scripts/sync-deps.sh backend && cd backend/ && uvicorn app.main:app --reload"
+  run_cmd "source backend/.venv/bin/activate && ./scripts/sync-deps.sh backend && cd backend/ && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --env-file .env"
 
   select_pane 0
   #run_cmd "tmux select-pane -t 0 -T 'nvim'"
